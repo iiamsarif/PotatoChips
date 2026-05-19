@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Potato Leaf Disease Detection</title>
+  <style>
+    :root {
+      --bg: #f7fbff;
+      --panel: #ffffff;
+      --panel-2: #f1f8ff;
+      --text: #12324f;
+      --muted: #5f7891;
+      --accent: #1f8fe5;
+      --accent-2: #5bc0ff;
+      --accent-3: #dff2ff;
+      --success: #1f9d66;
+      --danger: #e45858;
+      --border: #d8e8f6;
+      --shadow: 0 18px 50px rgba(31, 143, 229, 0.10);
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(91, 192, 255, 0.20), transparent 28%),
+        radial-gradient(circle at top right, rgba(31, 143, 229, 0.12), transparent 28%),
+        linear-gradient(180deg, #ffffff 0%, #f4faff 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 0.95fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-left,
+    .hero-right,
+    .section,
+    .upload-box {
+      padding: 24px;
+    }
+
+    .title {
+      font-size: clamp(32px, 4vw, 58px);
+      line-height: 1.02;
+      margin: 0 0 12px;
+      letter-spacing: -0.04em;
+      color: #0d2742;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+      max-width: 64ch;
+      margin-bottom: 22px;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .badge {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #eef7ff, #ffffff);
+      border: 1px solid var(--border);
+      color: #15507e;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .upload-box {
+      border: 1.5px dashed #9ed4fb;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, #ffffff, #f4fbff);
+      text-align: center;
+      transition: 0.25s ease;
+      cursor: pointer;
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .upload-box.dragover {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, #f7fcff, #eaf7ff);
+      transform: translateY(-2px);
+    }
+
+    .upload-icon {
+      width: 74px;
+      height: 74px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #dff2ff, #ffffff);
+      border: 1px solid #cbe7fa;
+      font-size: 30px;
+    }
+
+    .upload-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 0;
+      color: #11314f;
+    }
+
+    .upload-text {
+      color: var(--muted);
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.7;
+      max-width: 52ch;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      justify-content: center;
+    }
+
+    .btn {
+      border: none;
+      outline: none;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1f8fe5, #5bc0ff);
+      color: white;
+      box-shadow: 0 10px 22px rgba(31, 143, 229, 0.20);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: #1f8fe5;
+      border: 1px solid #b7dcf5;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .preview-wrap {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .preview {
+      width: 100%;
+      max-height: 350px;
+      object-fit: cover;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      display: none;
+      background: #fff;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .mini-card {
+      background: linear-gradient(180deg, #ffffff, #f8fcff);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+      display: block;
+      font-weight: 600;
+    }
+
+    .value {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.03em;
+      color: #0d2742;
+    }
+
+    .confidence-bar {
+      width: 100%;
+      height: 12px;
+      background: #e9f4fd;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+      border: 1px solid #d8eaf8;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-2), var(--accent));
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    .prob-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .prob-item {
+      display: grid;
+      grid-template-columns: 120px 1fr 60px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .prob-name {
+      font-size: 14px;
+      color: #11314f;
+      font-weight: 600;
+    }
+
+    .prob-track {
+      height: 10px;
+      background: #e9f4fd;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #d8eaf8;
+    }
+
+    .prob-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #7ecbff, #1f8fe5);
+    }
+
+    .prob-num {
+      text-align: right;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section {
+      margin-top: 24px;
+    }
+
+    .section h2 {
+      margin: 0 0 12px;
+      font-size: 24px;
+      letter-spacing: -0.03em;
+      color: #0d2742;
+    }
+
+    .section p {
+      color: var(--muted);
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    .article {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .paper-card {
+      background: linear-gradient(180deg, #ffffff, #f7fbff);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      min-height: 180px;
+    }
+
+    .paper-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      color: #11314f;
+    }
+
+    .paper-card p {
+      font-size: 14px;
+    }
+
+    .recommendation {
+      background: linear-gradient(180deg, #eef9ff, #ffffff);
+      border: 1px solid #bfe4fb;
+      border-radius: 18px;
+      padding: 18px;
+      margin-top: 18px;
+    }
+
+    .recommendation h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      color: #0d2742;
+    }
+
+    .recommendation ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--text);
+      line-height: 1.8;
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      margin: 28px 0 8px;
+      font-size: 13px;
+    }
+
+    .spinner {
+      display: none;
+      margin-top: 14px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+      .article {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 16px;
+      }
+      .hero-left, .hero-right, .section, .upload-box {
+        padding: 18px;
+      }
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+      .prob-item {
+        grid-template-columns: 1fr;
+      }
+      .prob-num {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <div class="card hero-left">
+        <div class="badge-row">
+          <span class="badge">Deep Learning</span>
+          <span class="badge">Computer Vision</span>
+          <span class="badge">Potato Leaf Classification</span>
+        </div>
+
+        <h1 class="title">Potato Leaf Disease Detection System</h1>
+        <p class="subtitle">
+          Upload a potato leaf image and the model will classify it as Early Blight, Late Blight, or Healthy.
+          This interface uses a clean research-style theme and connects directly to the Python backend for prediction.
+        </p>
+
+        <div class="upload-box" id="dropZone">
+          <div class="upload-icon">🌿</div>
+          <h3 class="upload-title">Upload Leaf Image</h3>
+          <p class="upload-text">
+            Drag and drop a photo here or click the button below.
+            The image will be sent to the Flask backend for prediction.
+          </p>
+
+          <input id="fileInput" type="file" accept="image/*" />
+          <div class="btn-row">
+            <button class="btn btn-primary" id="chooseBtn">Choose Photo</button>
+            <button class="btn btn-secondary" id="predictBtn">Predict Disease</button>
+          </div>
+
+          <div class="spinner" id="spinner">Analyzing image...</div>
+        </div>
+
+        <div class="preview-wrap">
+          <img id="preview" class="preview" alt="Leaf preview" />
+
+          <div class="result-grid">
+            <div class="mini-card">
+              <span class="label">Prediction</span>
+              <p class="value" id="predictedClass">--</p>
+            </div>
+            <div class="mini-card">
+              <span class="label">Confidence</span>
+              <p class="value" id="confidence">--</p>
+              <div class="confidence-bar">
+                <div class="confidence-fill" id="confidenceFill"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini-card">
+            <span class="label">Model Probabilities</span>
+            <div class="prob-list" id="probList"></div>
+          </div>
+
+          <div class="recommendation" id="recommendationBox" style="display:none;">
+            <h3 id="recTitle">Recommendation</h3>
+            <ul id="recList"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card hero-right">
+        <div class="section" style="padding:0;">
+          <h2>Abstract</h2>
+          <p>
+            This project uses a convolutional neural network based transfer learning pipeline to classify
+            potato leaf images into disease categories. The system processes the uploaded image, performs
+            preprocessing, runs inference through the trained TensorFlow model, and returns the predicted class
+            with confidence and treatment suggestions.
+          </p>
+        </div>
+
+        <div class="section" style="padding-left:0; padding-right:0;">
+          <h2>Methodology</h2>
+          <div class="article">
+            <div class="paper-card">
+              <h3>1. Upload</h3>
+              <p>
+                The user selects a single leaf image in the browser.
+                The file is previewed locally before being sent to the backend.
+              </p>
+            </div>
+            <div class="paper-card">
+              <h3>2. Prediction</h3>
+              <p>
+                Flask receives the image, preprocesses it to 224×224, and feeds it into the saved Keras model.
+              </p>
+            </div>
+            <div class="paper-card">
+              <h3>3. Output</h3>
+              <p>
+                The backend returns the predicted disease class, confidence score, class probabilities, and care advice.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" style="padding-left:0; padding-right:0; padding-bottom:0;">
+          <h2>Project Notes</h2>
+          <p>
+            Make sure the model file is placed beside <strong>server.py</strong> as <strong>potato_model.keras</strong>.
+            The prediction labels should match the training label order: <strong>Early</strong>, <strong>Healty</strong>, <strong>Late</strong>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Potato Leaf Disease Detection • Flask + TensorFlow • Research-style UI
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const chooseBtn = document.getElementById("chooseBtn");
+    const predictBtn = document.getElementById("predictBtn");
+    const dropZone = document.getElementById("dropZone");
+    const preview = document.getElementById("preview");
+    const spinner = document.getElementById("spinner");
+
+    const predictedClassEl = document.getElementById("predictedClass");
+    const confidenceEl = document.getElementById("confidence");
+    const confidenceFill = document.getElementById("confidenceFill");
+    const probList = document.getElementById("probList");
+    const recommendationBox = document.getElementById("recommendationBox");
+    const recTitle = document.getElementById("recTitle");
+    const recList = document.getElementById("recList");
+
+    let selectedFile = null;
+
+    chooseBtn.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files && fileInput.files[0]) {
+        selectedFile = fileInput.files[0];
+        showPreview(selectedFile);
+      }
+    });
+
+    function showPreview(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        selectedFile = file;
+        fileInput.files = e.dataTransfer.files;
+        showPreview(file);
+      }
+    });
+
+    predictBtn.addEventListener("click", async () => {
+      if (!selectedFile) {
+        alert("Please upload one potato leaf image first.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("image", selectedFile);
+
+      spinner.style.display = "block";
+      predictBtn.disabled = true;
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Prediction failed");
+        }
+
+        predictedClassEl.textContent = data.predicted_class;
+        confidenceEl.textContent = data.confidence.toFixed(2) + "%";
+        confidenceFill.style.width = data.confidence + "%";
+
+        probList.innerHTML = "";
+        data.probabilities.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "prob-item";
+          row.innerHTML = `
+            <div class="prob-name">${item.label}</div>
+            <div class="prob-track">
+              <div class="prob-fill" style="width:${item.probability}%"></div>
+            </div>
+            <div class="prob-num">${item.probability.toFixed(2)}%</div>
+          `;
+          probList.appendChild(row);
+        });
+
+        recommendationBox.style.display = "block";
+        recTitle.textContent = data.recommendation.title;
+        recList.innerHTML = "";
+        data.recommendation.advice.forEach(text => {
+          const li = document.createElement("li");
+          li.textContent = text;
+          recList.appendChild(li);
+        });
+
+      } catch (err) {
+        alert("Error: " + err.message);
+      } finally {
+        spinner.style.display = "none";
+        predictBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
